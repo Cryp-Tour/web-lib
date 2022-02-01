@@ -1,0 +1,24 @@
+{
+  "name": "web-lib",
+  "version": "1.0.0",
+  "description": "Library for use in Browser",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "node ./test/test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Cryp-Tour/web-lib.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Cryp-Tour/web-lib/issues"
+  },
+  "homepage": "https://github.com/Cryp-Tour/web-lib#readme",
+  "dependencies": {
+  }
+}
