@@ -1,4 +1,4 @@
-# :scroll: web-lib
+# :books: web-lib
 ## :stars: Overview
 
  - :books: [provider-js](https://github.com/Cryp-Tour/provider-js): NodeJS-Module for listening to newly created Datasets
