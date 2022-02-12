@@ -7,7 +7,9 @@ CrypTourWeb = {
     listeners: {
         onload: []
     },
-    contractJSONPaths: ["contracts/BPool.json"],
+    contractJSONPaths: ["contracts/BPool.json",
+                        "contracts/TourTokenFactory.json",
+                        "contracts/TourTokenTemplate.json"],
     state: {
         initWeb3: false,
         initContracts: 0
@@ -113,5 +115,18 @@ CrypTourWeb = {
             }
             resolve();
         });
+    },
+
+    createTokenForDataset: function (blob, name, symbol, cap) {
+        x = new Promise((resolve, reject) => {
+            let factoryInstance;
+            CrypTourWeb.contracts["TourTokenFactory"].deployed().then((instance) => {
+                factoryInstance = instance;
+                return factoryInstance.createToken.sendTransaction(blob, name, symbol, cap, {from: CrypTourWeb.accounts[0]})
+            })
+            .then((res) => { resolve(res) })
+            .catch((err) => { reject(err) })
+        })
+        return x;
     }
 }

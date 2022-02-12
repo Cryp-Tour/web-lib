@@ -16,7 +16,22 @@
     })">Connect Wallet</button>
 
     <h4>3. Create New Dataset</h4>
-    <button>Create New Dataset</button>
+    Blob: <input type="text" id="blob">  <br/>
+    Name: <input type="text" id="Name"> <br/>
+    Symbol: <input type="text" id="symbol"> <br/>   
+    Cap: <input type="text" id="cap"> <br/>  
+    <button onclick="
+        let paramBlob = blob.value;
+        let paramName = Name.value;
+        let paramSymbol = symbol.value;
+        let paramCap = cap.value;
+        CrypTourWeb.createTokenForDataset(paramBlob, paramName, paramSymbol, paramCap).then((res) => {
+            console.log('[HTML] Token Created')
+            console.log(res)
+            txid.value = res
+        })
+    ">Create New Dataset</button><br/>
+    TransactionID: <input disabled id="txid">
     <h4>4. Create Balancer Pool</h4>
     <button>Create Balancer Pool</button>
     <h4>5. Start Balancer Pool</h4>
