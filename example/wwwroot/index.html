@@ -11,7 +11,9 @@
     <button onclick="CrypTourWeb.init()"> Init </button>
     
     <h4>2. Connect Wallet</h4>
-    <button>Connect Wallet</button>
+    <button onclick="CrypTourWeb.initWallet().then(() => {
+        console.log('[HTML] Done')
+    })">Connect Wallet</button>
 
     <h4>3. Create New Dataset</h4>
     <button>Create New Dataset</button>
