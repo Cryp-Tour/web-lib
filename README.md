@@ -10,3 +10,5 @@ Simply load the JS-File, that is in the src-Directory.
 
 ## :chart_with_upwards_trend: Testing
 There is an example project in the example-Directory. Install dependencies with `npm i` and start the webserver with `node index.js`. Then navigate to `localhost:8080` in your Browser, provided you have MetaMask installed.
+The example assumes the contracts repository is in the same parent directory as this repository. 
+The contracts should be deployed, so that the ABIs are in the build directory.
