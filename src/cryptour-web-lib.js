@@ -3,13 +3,17 @@ CrypTourWeb = {
     accounts: null,
     debug: false,
     web3provider: null,
+    tourtokens: [],
+    lps: [],
     contracts: {},
     listeners: {
         onload: []
     },
     contractJSONPaths: ["contracts/BPool.json",
-                        "contracts/TourTokenFactory.json",
-                        "contracts/TourTokenTemplate.json"],
+        "contracts/BFactory.json",
+        "contracts/TourTokenFactory.json",
+        "contracts/TourTokenTemplate.json",
+        "contracts/TToken.json"],
     state: {
         initWeb3: false,
         initContracts: 0
@@ -30,13 +34,13 @@ CrypTourWeb = {
         if (window.ethereum) {
             if (CrypTourWeb.debug)
                 console.log("[CrypTourWeb] Init Web3 as window.ethereum")
-            CrypTourWeb.web3Provider = window.ethereum;
+            CrypTourWeb.web3Provider = new Web3(window.ethereum);
         }
         // Legacy dapp browsers...
         else if (window.web3) {
             if (CrypTourWeb.debug)
                 console.log("[CrypTourWeb] Init Web3 as window.web3")
-            CrypTourWeb.web3Provider = window.web3.currentProvider;
+            CrypTourWeb.web3Provider = new Web3(window.web3.currentProvider);
         }
         // TODO: fallback for not compatible Browsers
         CrypTourWeb.state.initWeb3 = true;
@@ -47,25 +51,33 @@ CrypTourWeb = {
         CrypTourWeb.contractJSONPaths.forEach(path => {
             if (CrypTourWeb.debug)
                 console.log("[CrypTourWeb] Get Contract " + path)
-            $.getJSON(path, function (data) {
-                // Get the necessary contract artifact file and instantiate it with @truffle/contract
-                let ContractArtifact = data;
-                let name = ContractArtifact.contractName;
 
-                CrypTourWeb.contracts[name] = TruffleContract(ContractArtifact);
+            CrypTourWeb.web3Provider.eth.net.getId().then((networkID) => {
+                $.getJSON(path, (data) => {
+                    // Get the necessary contract artifact file and instantiate it with web3
+                    let ContractArtifact = data;
+                    let name = ContractArtifact.contractName;
+                    if (ContractArtifact.networks[networkID])
+                    {
+                        CrypTourWeb.contracts[name] = new CrypTourWeb.web3Provider.eth.Contract(ContractArtifact.abi, 
+                            ContractArtifact.networks[networkID].address);
+                    }
+                    else
+                    {
+                        CrypTourWeb.contracts[name] = new CrypTourWeb.web3Provider.eth.Contract(ContractArtifact.abi);
+                    }
 
-                // Set the provider for our contract
-                CrypTourWeb.contracts[name].setProvider(CrypTourWeb.web3Provider);
+                    CrypTourWeb.contracts[name].options.data = ContractArtifact.bytecode;
+                    // Call Listener for Onload 
+                    CrypTourWeb.state.initContracts++;
+                    if (CrypTourWeb.state.initContracts == CrypTourWeb.contractJSONPaths.length) {
+                        CrypTourWeb.__callListeners(CrypTourWeb.listeners.onload, undefined);
 
-                // Call Listener for Onload 
-                CrypTourWeb.state.initContracts++;
-                if (CrypTourWeb.state.initContracts == CrypTourWeb.contractJSONPaths.length) {
-                    CrypTourWeb.__callListeners(CrypTourWeb.listeners.onload, undefined);
-
-                    if (CrypTourWeb.debug)
-                        console.log("[CrypTourWeb] Got all Contracts")
-                }
-            });
+                        if (CrypTourWeb.debug)
+                            console.log("[CrypTourWeb] Got all Contracts")
+                    }
+                });
+            })
         })
     },
 
@@ -119,14 +131,46 @@ CrypTourWeb = {
 
     createTokenForDataset: function (blob, name, symbol, cap) {
         x = new Promise((resolve, reject) => {
-            let factoryInstance;
-            CrypTourWeb.contracts["TourTokenFactory"].deployed().then((instance) => {
-                factoryInstance = instance;
-                return factoryInstance.createToken.sendTransaction(blob, name, symbol, cap, {from: CrypTourWeb.accounts[0]})
-            })
-            .then((res) => { resolve(res) })
-            .catch((err) => { reject(err) })
+            CrypTourWeb.contracts['TourTokenFactory'].methods.createToken(blob, name, symbol, cap)
+                .send({ from: CrypTourWeb.accounts[0] })
+                .then((res) => { 
+                    CrypTourWeb.tourtokens.push(res.events['TokenRegistered'].returnValues.tokenAddress)
+                    resolve(res) 
+                })
+                .catch((err) => { reject(err) })
         })
         return x;
+    },
+
+    createLP: function () {
+        x = new Promise((resolve, reject) => {
+            CrypTourWeb.contracts["BFactory"].methods.newBPool()
+                .send({ from: CrypTourWeb.accounts[0] })
+                .then((res) => { 
+                    CrypTourWeb.lps.push(res.events['LOG_NEW_POOL'].returnValues.pool)
+                    resolve(res) 
+                })
+                .catch((err) => { reject(err) })
+        });
+        return x;
+    },
+
+    startLP: function (token1, address1, token2, address2, lp) {
+        x = new Promise((resolve, reject) => {
+            CrypTourWeb.contracts["BPool"].methods.bind(address1, token1)
+            .send({ from: CrypTourWeb.accounts[0] })
+            .then()
+        })
+        return x;
+    },
+
+    getStatusOfLP: function () {
+        
+    },
+
+    getStatusOfTT: function () {
+        
     }
+
+
 }
