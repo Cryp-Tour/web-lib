@@ -19,16 +19,19 @@
     Blob: <input type="text" id="blob">  <br/>
     Name: <input type="text" id="Name"> <br/>
     Symbol: <input type="text" id="symbol"> <br/>   
-    Cap: <input type="text" id="cap"> <br/>  
+    Cap: <input type="text" id="cap" value="2500000000000000000000"> <br/>
+    Mint: <input type="text" id="mint" value="25000000000000000000"> <br/>  
     <button onclick="
         let paramBlob = blob.value;
         let paramName = Name.value;
         let paramSymbol = symbol.value;
         let paramCap = cap.value;
-        CrypTourWeb.createTokenForDataset(paramBlob, paramName, paramSymbol, paramCap).then((res) => {
+        let paramMint = mint.value;
+        CrypTourWeb.createTokenForDataset(paramBlob, paramName, paramSymbol, paramCap, paramMint).then((res) => {
             console.log('[HTML] Token Created')
             console.log(res)
-            txid.value = res.transactionHash
+            txid.value = res[0].transactionHash
+            token1.value = res[0].events['TokenRegistered'].returnValues.tokenAddress
         })
     ">Create New Dataset</button><br/>
     TransactionID: <input disabled id="txid">
@@ -39,7 +42,7 @@
             console.log(res)
             
             txid2.value = res.transactionHash;
-            token1.value = res.events['LOG_NEW_POOL'].returnValues['pool'];
+            bpool.value = res.events['LOG_NEW_POOL'].returnValues['pool'];
         })
     ">Create Balancer Pool</button><br />
     TransactionID: <input disabled id="txid2">
@@ -53,7 +56,7 @@
             console.log('[HTML] Created WETH');
             console.log(weth)
             CrypTourWeb.contracts['TToken'] = weth
-            return weth.methods.mint(CrypTourWeb.accounts[0], 2500000000000000).send({ from: CrypTourWeb.accounts[0]});
+            return weth.methods.mint(CrypTourWeb.accounts[0], '25000000000000000000').send({ from: CrypTourWeb.accounts[0]});
         }).then(() => {
             console.log('[HTML] Minted WETH');
             token2.value = wethAddress.value;
@@ -61,15 +64,26 @@
     ">Deploy WETH</button><br/>
     WETH-Address: <input disabled id="wethAddress">
     <h4>6. Start Balancer Pool</h4>
-    Token1 Address: <input type="text" id="token1"> <br/>
-    Token2 Address: <input type="text" id="token2"> <br/> 
+    Token1 Address: <input type="text" id="token1"> Amount: <input type="text" value="1000000000000000000" id="token1amount"> <br/>
+    Token2 Address: <input type="text" id="token2"> Amount: <input type="text" value="1000000000000000000" id="token2amount"> <br/> 
+    BPool Address: <input type="text" id="bpool"> <br/> 
     <button onclick="
-        
+        CrypTourWeb.startLP(token1amount.value, token1.value, token2amount.value, token2.value, bpool.value)
+        .then(res => {
+            console.log(res)
+        })
+        .catch(err => {
+            console.log(err)
+        })
     ">Start Balancer Pool</button>
     <h4>7. Swap Tokens</h4>
     <button>Swap Tokens</button>
     <h4>8. Consume Dataset</h4>
     <button>Consume Dataset</button>
+    <h4>9. Stake LP</h4>
+    <button>Stake</button>
+    <h4>10. Exit LP</h4>
+    <button>Exit</button>
 
     
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
