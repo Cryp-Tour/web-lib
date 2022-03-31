@@ -7,20 +7,34 @@
 </head>
 <body style="font-family: Arial">
     <h3>CrypTourWeb Test Site</h1>
-    <h4>1. Init CrypTourWeb</h2>
-    <button onclick="CrypTourWeb.init()"> Init </button>
+    <h4 id="h4_1">1. Init CrypTourWeb</h2>
+    <button onclick="
+        CrypTourWeb.init().then((res) => {
+            h4_1.style.color = 'green'
+            console.log(res)
+        })
+        .catch(err => {
+            h4_1.style.color = 'red'
+            console.log(err)
+        })
+        "> Init </button>
     
-    <h4>2. Connect Wallet</h4>
+    <h4  id="h4_2">2. Connect Wallet</h4>
     <button onclick="CrypTourWeb.initWallet().then(() => {
+        h4_2.style.color = 'green'
         console.log('[HTML] Done')
+    })
+    .catch(err => {
+        h4_2.style.color = 'red'
+        console.log(err)
     })">Connect Wallet</button>
 
-    <h4>3. Create New Dataset</h4>
+    <h4 id="h4_3">3. Create New Dataset</h4>
     Blob: <input type="text" id="blob">  <br/>
     Name: <input type="text" id="Name"> <br/>
     Symbol: <input type="text" id="symbol"> <br/>   
-    Cap: <input type="text" id="cap" value="2500000000000000000000"> <br/>
-    Mint: <input type="text" id="mint" value="25000000000000000000"> <br/>  
+    Cap: <input type="text" id="cap" value="25000"> <br/>
+    Mint: <input type="text" id="mint" value="25000"> <br/>  
     <button onclick="
         let paramBlob = blob.value;
         let paramName = Name.value;
@@ -28,58 +42,156 @@
         let paramCap = cap.value;
         let paramMint = mint.value;
         CrypTourWeb.createTokenForDataset(paramBlob, paramName, paramSymbol, paramCap, paramMint).then((res) => {
+            h4_3.style.color = 'green'
             console.log('[HTML] Token Created')
             console.log(res)
             txid.value = res[0].transactionHash
-            token1.value = res[0].events['TokenRegistered'].returnValues.tokenAddress
+            token2.value = res[0].events['TokenRegistered'].returnValues.tokenAddress
+            token2_7.value = token2.value
+            token2_8.value = token2.value
+            token2_9.value = token2.value
+        }).catch(err => {
+            h4_3.style.color = 'red'
+            console.log(err)
         })
     ">Create New Dataset</button><br/>
     TransactionID: <input disabled id="txid">
-    <h4>4. Create Balancer Pool</h4>
+    <h4 id="h4_4">4. Create Balancer Pool</h4>
     <button onclick="
         CrypTourWeb.createLP().then((res) => {
+            h4_4.style.color = 'green'
             console.log('[HTML] Pool Created')
             console.log(res)
             
-            txid2.value = res.transactionHash;
-            bpool.value = res.events['LOG_NEW_POOL'].returnValues['pool'];
+            txid2.value = res[0].transactionHash;
+            bpool.value = res[0].events['LOG_NEW_POOL'].returnValues['pool'];
+            bpool_7.value = res[0].events['LOG_NEW_POOL'].returnValues['pool'];
+            bpool_8.value = res[0].events['LOG_NEW_POOL'].returnValues['pool'];
+        }).catch(err => {
+            h4_4.style.color = 'red'
+            console.log(err)
         })
     ">Create Balancer Pool</button><br />
     TransactionID: <input disabled id="txid2">
-    <h4>5. Create Wrapped ETH Token </h4>
+    <h4  id="h4_5">5. Create & Mint Wrapped ETH Token </h4>
     <button onclick="
         let TToken = CrypTourWeb.contracts['TToken'];
-        TToken.deploy({ arguments: ['Wrapped ETH', 'WETH', 20,]})
+        TToken.deploy({ arguments: ['Wrapped ETH', 'WETH', 18,]})
         .send({ from: CrypTourWeb.accounts[0] })
         .then((weth) => {
             wethAddress.value = weth.options.address;
+            tokenInAddress.value = weth.options.address;
             console.log('[HTML] Created WETH');
             console.log(weth)
-            CrypTourWeb.contracts['TToken'] = weth
-            return weth.methods.mint(CrypTourWeb.accounts[0], '25000000000000000000').send({ from: CrypTourWeb.accounts[0]});
+            return weth.methods.mint(CrypTourWeb.accounts[0], CrypTourWeb.web3Provider.utils.toWei('3000'))
+                .send({ from: CrypTourWeb.accounts[0]});
         }).then(() => {
+            h4_5.style.color = 'green'
             console.log('[HTML] Minted WETH');
-            token2.value = wethAddress.value;
+        }).catch(err => {
+            h4_5.style.color = 'red'
+            console.log(err)
         })
-    ">Deploy WETH</button><br/>
+    ">Deploy & Mint WETH</button><br/>
     WETH-Address: <input disabled id="wethAddress">
-    <h4>6. Start Balancer Pool</h4>
-    Token1 Address: <input type="text" id="token1"> Amount: <input type="text" value="1000000000000000000" id="token1amount"> <br/>
-    Token2 Address: <input type="text" id="token2"> Amount: <input type="text" value="1000000000000000000" id="token2amount"> <br/> 
+    <h5 id="h5_5_1">5.1 Set Token In Address</h5>
+    Token In Address: <input type="text" id="tokenInAddress"> <br/>
+    <button onclick="
+        CrypTourWeb.erc20TokenIn = tokenInAddress.value
+        h5_5_1.style.color = 'green'
+    ">Set</button>
+    <h4 id="h4_6">6. Start Balancer Pool</h4>
+    Token1 Amount: <input type="text" value="100" id="token1amount"> <br/>
+    Token2 Address: <input type="text" id="token2"> Amount: <input type="text" value="100" id="token2amount"> <br/> 
     BPool Address: <input type="text" id="bpool"> <br/> 
     <button onclick="
-        CrypTourWeb.startLP(token1amount.value, token1.value, token2amount.value, token2.value, bpool.value)
+        CrypTourWeb.startLP(token1amount.value,  token2amount.value, token2.value, bpool.value)
         .then(res => {
+            h4_6.style.color = 'green'
             console.log(res)
         })
         .catch(err => {
+            h4_6.style.color = 'red'
             console.log(err)
         })
     ">Start Balancer Pool</button>
-    <h4>7. Swap Tokens</h4>
-    <button>Swap Tokens</button>
-    <h4>8. Consume Dataset</h4>
-    <button>Consume Dataset</button>
+    <h4 id="h4_7">7. Get Spot Price</h4>
+    Token2 Address: <input type="text" id="token2_7"> <br/> 
+    BPool Address: <input type="text" id="bpool_7"> <br/> 
+    <button onclick="
+        CrypTourWeb.getSpotPrice(bpool_7.value, token2_7.value)
+        .then(res => {
+            h4_7.style.color = 'green'
+            spotPrice_7.value = res.result.spotPrice.main
+        })
+        .catch(err => {
+            h4_7.style.color = 'red'
+            console.log(err)
+        })
+    ">Get Spot Price</button><br/>
+    spotPrice: <input type="text" id="spotPrice_7" disabled> <br/> 
+
+    <h4 id="h4_8">8. Get TT</h4>
+    Token2 Address: <input type="text" id="token2_8"> <br/> 
+    TT: <input type="text" id="TT_to_get" value="1"> <br/> 
+    BPool Address: <input type="text" id="bpool_8"> <br/> 
+    <button onclick="
+        CrypTourWeb.recommParamsForGetTT(bpool_8.value, token2_8.value, CrypTourWeb.web3Provider.utils.toWei(TT_to_get.value))
+        .then(res => {
+            h4_8.style.color = 'yellow'
+            console.log(res)
+            spotPrice_8.value = res.result.spotPrice.wei
+            maxAmountIn.value = res.result.maxAmountIn.wei
+            maxPrice.value = res.result.maxPrice.wei
+        })
+        .catch((err) => {
+            h4_8.style.color = 'red'
+            console.log(err)
+        })
+    ">Get Recommended Params</button> <br/>  
+
+    spotPrice: <input type="text" id="spotPrice_8" disabled> <br/> 
+    maxAmountIn: <input type="text" id="maxAmountIn"> <br/> 
+    maxPrice: <input type="text" id="maxPrice"> <br/> 
+
+    <button onclick="
+    CrypTourWeb.getTT(bpool_8.value, maxAmountIn.value, token2_8.value, CrypTourWeb.web3Provider.utils.toWei(TT_to_get.value), maxPrice.value)
+    .then(res => {
+        h4_8.style.color = 'green'
+        console.log(res)
+    })
+    .catch((err) => {
+        h4_8.style.color = 'red'
+        console.log(err)
+    })
+    ">Get TT</button>
+
+    <h4 id="h4_9">9. Consume Dataset</h4>
+    Token2 Address: <input type="text" id="token2_9"> <br/> 
+
+    <button onclick="
+        CrypTourWeb.canConsumeTTat(token2_9.value)
+        .then((res) => {
+            h4_9.style.color = 'yellow'
+            canConsume.value = res.result.canConsume
+        })
+        .catch(err => {
+            h4_9.style.color = 'red'
+            console.log(err)
+        })
+    ">Can Consume Dataset?</button>  <br/> 
+    <input type="text" id="canConsume" disabled> <br/> 
+    <button onclick="
+        CrypTourWeb.consumeTT(token2_9.value, '12345')
+        .then((res) => {
+            h4_9.style.color = 'green'
+
+        })
+        .catch(err => {
+            h4_9.style.color = 'red'
+            console.log(err)
+        })
+    ">Consume Dataset</button>
     <h4>9. Stake LP</h4>
     <button>Stake</button>
     <h4>10. Exit LP</h4>
