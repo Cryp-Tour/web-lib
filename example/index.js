@@ -17,7 +17,7 @@ _app.get("/cryptour-web-lib.js", (req, res) => {
     res.sendFile(path.join(__dirname, "../src/cryptour-web-lib.js"));
 })
 _app.use(serveStatic('./wwwroot'))
-_app.use(serveStatic('../../contracts/build'))
+_app.use(serveStatic('../../contracts/metadata/evan'))
 _app.listen(_config.webInterface.port, () => {
     console.log("[webInterface] Server running on " + _config.webInterface.port + " ...")
 })
