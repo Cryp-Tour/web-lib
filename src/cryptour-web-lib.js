@@ -236,7 +236,7 @@ CrypTourWeb = {
             .then((res) => {
                 responses.result.spotPrice = res.result.spotPrice
                 responses.result.maxPrice.wei = CrypTourWeb.web3Provider.utils.toBN('2').mul(CrypTourWeb.web3Provider.utils.toBN(res.result.spotPrice.wei))
-                responses.result.maxAmountIn.wei = CrypTourWeb.web3Provider.utils.fromWei(responses.result.maxPrice.wei.mul(CrypTourWeb.web3Provider.utils.toBN(amountOut)))
+                responses.result.maxAmountIn.wei = CrypTourWeb.web3Provider.utils.fromWei(responses.result.maxPrice.wei.mul(CrypTourWeb.web3Provider.utils.toBN(amountOut))).split('.')[0]
                 resolve(responses)
             })
             .catch(err => {
@@ -306,20 +306,41 @@ CrypTourWeb = {
         return x;
     },
 
-    // Swap WETH or similar to TT
-    sellTT: function () {
+    recommParamsForStakeLP: function (lp, TT, amountinToken2) {
+        let x = new Promise((resolve, reject) => {
+            let result = {}
+            CrypTourWeb.getSpotPrice(lp, TT).then((res) => {
+                let spotPrice = res.result.spotPrice.wei
+                result.spotPrice = res
+                
+            }).catch(err => {
+                reject(err, result)
+            })
 
+            resolve(result)
+        })
+        return x
     },
 
     // Stake Liquidity Pool
-    stakeLP: function () 
+    stakeLP: function (lp, lpTokenOut, maxAmountsInTT, maxAmountsInERC20) 
     {
+        x = new Promise((resolve, reject) => {
+
+        })
+        return x
+    },
+    
+    recommParamsForExitLP: function () {
 
     },
 
     // Exit Liquidity Pool
-    exitLP: function () {
+    exitLP: function (lp, lpTokenIn, maxAmountsInTT, maxAmountsInERC20) {
+        x = new Promise((resolve, reject) => {
 
+        })
+        return x
     },
 
     // Consume TourToken
@@ -376,8 +397,8 @@ CrypTourWeb = {
             tt_contract.methods.balanceOf(CrypTourWeb.accounts[0])
             .call({ from: CrypTourWeb.accounts[0] })
             .then((res) => {
-                let balance = CrypTourWeb.web3Provider.utils.fromWei(res)
-                if (balance > 0)
+                let needed = CrypTourWeb.web3Provider.utils.toWei("1.001")
+                if (res > needed)
                 {
                     responses.result.canConsume = true
                 }
@@ -392,16 +413,5 @@ CrypTourWeb = {
             })
         })
         return x;
-    },
-
-    // Check wether LP can be swapped with
-    getStatusOfLP: function (address) {
-
-    },
-
-    // Check Status of TT
-    getStatusOfTT: function (address) {
-
     }
-
 }

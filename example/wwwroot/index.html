@@ -50,6 +50,7 @@
             token2_7.value = token2.value
             token2_8.value = token2.value
             token2_9.value = token2.value
+            token2_10.value = token2.value
         }).catch(err => {
             h4_3.style.color = 'red'
             console.log(err)
@@ -67,6 +68,7 @@
             bpool.value = res[0].events['LOG_NEW_POOL'].returnValues['pool'];
             bpool_7.value = res[0].events['LOG_NEW_POOL'].returnValues['pool'];
             bpool_8.value = res[0].events['LOG_NEW_POOL'].returnValues['pool'];
+            bpool_10.value = res[0].events['LOG_NEW_POOL'].returnValues['pool'];
         }).catch(err => {
             h4_4.style.color = 'red'
             console.log(err)
@@ -192,9 +194,21 @@
             console.log(err)
         })
     ">Consume Dataset</button>
-    <h4>9. Stake LP</h4>
-    <button>Stake</button>
-    <h4>10. Exit LP</h4>
+    <h4 id="h4_10">10. Stake LP</h4>
+    Token2 Address: <input type="text" id="token2_10"> <br/> 
+    Token2 In: <input type="text" id="Token2ToStake" value="1"> <br/> 
+    BPool Address: <input type="text" id="bpool_10"> <br/> 
+    <button onclick="
+    CrypTourWeb.recommParamsForStakeLP(bpool_10.value, token2_10.value, Token2ToStake.value)
+    .then((res) = {
+
+    })
+    .catch(err => {
+        h4_10.style.color = 'red'
+        console.log(err)
+    })
+    ">Stake</button>
+    <h4>11. Exit LP</h4>
     <button>Exit</button>
 
     
