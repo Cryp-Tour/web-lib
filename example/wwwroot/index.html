@@ -39,8 +39,8 @@
         let paramBlob = blob.value;
         let paramName = Name.value;
         let paramSymbol = symbol.value;
-        let paramCap = cap.value;
-        let paramMint = mint.value;
+        let paramCap = CrypTourWeb.web3Provider.utils.toWei(cap.value);
+        let paramMint = CrypTourWeb.web3Provider.utils.toWei(mint.value);
         CrypTourWeb.createTokenForDataset(paramBlob, paramName, paramSymbol, paramCap, paramMint).then((res) => {
             h4_3.style.color = 'green'
             console.log('[HTML] Token Created')
@@ -69,6 +69,7 @@
             bpool_7.value = res[0].events['LOG_NEW_POOL'].returnValues['pool'];
             bpool_8.value = res[0].events['LOG_NEW_POOL'].returnValues['pool'];
             bpool_10.value = res[0].events['LOG_NEW_POOL'].returnValues['pool'];
+            bpool_11.value = res[0].events['LOG_NEW_POOL'].returnValues['pool'];
         }).catch(err => {
             h4_4.style.color = 'red'
             console.log(err)
@@ -107,7 +108,7 @@
     Token2 Address: <input type="text" id="token2"> Amount: <input type="text" value="100" id="token2amount"> <br/> 
     BPool Address: <input type="text" id="bpool"> <br/> 
     <button onclick="
-        CrypTourWeb.startLP(token1amount.value,  token2amount.value, token2.value, bpool.value)
+        CrypTourWeb.startLP(token1amount.value,  CrypTourWeb.web3Provider.utils.toWei(token2amount.value), CrypTourWeb.web3Provider.utils.toWei(token2.value), bpool.value)
         .then(res => {
             h4_6.style.color = 'green'
             console.log(res)
@@ -195,21 +196,51 @@
         })
     ">Consume Dataset</button>
     <h4 id="h4_10">10. Stake LP</h4>
-    Token2 Address: <input type="text" id="token2_10"> <br/> 
-    Token2 In: <input type="text" id="Token2ToStake" value="1"> <br/> 
+    TourToken Address: <input type="text" id="token2_10"> <br/> 
+    WETH In: <input type="text" id="Token2ToStake" value="1"> <br/> 
     BPool Address: <input type="text" id="bpool_10"> <br/> 
     <button onclick="
-    CrypTourWeb.recommParamsForStakeLP(bpool_10.value, token2_10.value, Token2ToStake.value)
-    .then((res) = {
-
-    })
-    .catch(err => {
-        h4_10.style.color = 'red'
-        console.log(err)
-    })
+        CrypTourWeb.recommParamsForStakeLP(bpool_10.value, token2_10.value, CrypTourWeb.web3Provider.utils.toWei(Token2ToStake.value))
+        .then((res) => {
+            console.log(res)
+            h4_10.style.color = 'green'
+            ttmaxin.value = res.result.recomm.maxttin
+            wethmaxin.value = res.result.recomm.maxwethin
+            lpout.value = res.result.recomm.lpout
+        
+        })
+        .catch(err => {
+            h4_10.style.color = 'red'
+            console.log(err)
+        })
+    ">get recommended Params</button><br/> 
+    TourToken Max Amount In: <input type="text" id="ttmaxin"> <br/> 
+    WETH In: <input type="text" id="wethmaxin" value="1"> <br/> 
+    LP out: <input type="text" id="lpout"> <br/> 
+    <button onclick="
+        CrypTourWeb.stakeLP(bpool_10.value, token2_10.value, lpout.value, ttmaxin.value, wethmaxin.value)
+        .then((res) => {
+            console.log(res)
+        })
+        .catch(err => {
+            h4_10.style.color = 'red'
+            console.log(err)
+        })
     ">Stake</button>
-    <h4>11. Exit LP</h4>
-    <button>Exit</button>
+    <h4 id="h4_11">11. Exit LP</h4>
+    LP in: <input type="text" id="lpin" value="1000000000000000000"> <br/> 
+    BPool Address: <input type="text" id="bpool_11"> <br/> 
+    <button onclick="
+        CrypTourWeb.exitLP(bpool_11.value, lpin.value)
+        .then((res)=>{
+            h4_11.style.color = 'green'
+
+        })
+        .catch(err => {
+            h4_11.style.color = 'red'
+            console.log(err)
+        })
+    ">Exit</button>
 
     
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->

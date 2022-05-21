@@ -1,4 +1,10 @@
 console.log("[CrypTourWeb] Using Cryp-Tour Web Lib: https://github.com/Cryp-Tour");
+
+
+function _multWithDec(x, dec) {
+    return CrypTourWeb.web3Provider.utils.fromWei(CrypTourWeb.web3Provider.utils.toBN(x).mul(CrypTourWeb.web3Provider.utils.toBN(CrypTourWeb.web3Provider.utils.toWei(dec))))
+}
+
 CrypTourWeb = {
     accounts: null,
     erc20TokenIn: null,
@@ -128,7 +134,7 @@ CrypTourWeb = {
         x = new Promise((resolve, reject) => {
             let resolveVals = []
             CrypTourWeb.contracts['TourTokenFactory'].methods.createToken(blob, name, symbol, 
-                    CrypTourWeb.web3Provider.utils.toWei(cap))
+                    cap)
                 .send({ from: CrypTourWeb.accounts[0] })
                 .then((res1) => {
                     resolveVals.push(res1)
@@ -136,7 +142,7 @@ CrypTourWeb = {
                     let tt = new CrypTourWeb.web3Provider.eth.Contract(CrypTourWeb.contracts["TourTokenTemplate"]._jsonInterface, 
                                 res1.events['TokenRegistered'].returnValues.tokenAddress)
                     return tt.methods.mint(CrypTourWeb.accounts[0], 
-                            CrypTourWeb.web3Provider.utils.toWei(mint))
+                            mint)
                         .send({ from: CrypTourWeb.accounts[0] })
                 })
                 .then((res2) =>{
@@ -169,13 +175,13 @@ CrypTourWeb = {
             let token1_contract = new CrypTourWeb.web3Provider.eth.Contract(CrypTourWeb.contracts["IERC20"]._jsonInterface, CrypTourWeb.erc20TokenIn)
             let token2_contract = new CrypTourWeb.web3Provider.eth.Contract(CrypTourWeb.contracts["IERC20"]._jsonInterface, address2)
             let responses = []
-            token1_contract.methods.approve(lp, CrypTourWeb.web3Provider.utils.toWei(token1))
+            token1_contract.methods.approve(lp, token1)
                 .send({ from: CrypTourWeb.accounts[0] })
                 .then((res) => {
                     responses.push(res)
                     if (CrypTourWeb.debug)
                         console.log(res)
-                    return token2_contract.methods.approve(lp, CrypTourWeb.web3Provider.utils.toWei(token2))
+                    return token2_contract.methods.approve(lp, token2)
                         .send({ from: CrypTourWeb.accounts[0] })
                 })
                 .then((res) => {
@@ -184,15 +190,14 @@ CrypTourWeb = {
                         console.log(res)
 
                     return pool_contract.methods.bind(CrypTourWeb.erc20TokenIn, 
-                            CrypTourWeb.web3Provider.utils.toWei(token1), CrypTourWeb.web3Provider.utils.toWei('1'))
+                            token1, CrypTourWeb.web3Provider.utils.toWei('1'))
                         .send({ from: CrypTourWeb.accounts[0] })
                 })
                 .then((res) => {
                     responses.push(res)
                     if (CrypTourWeb.debug)
                         console.log("Bound Token1")
-                    return pool_contract.methods.bind(address2, 
-                            CrypTourWeb.web3Provider.utils.toWei(token2), CrypTourWeb.web3Provider.utils.toWei('1'))
+                    return pool_contract.methods.bind(address2, token2, CrypTourWeb.web3Provider.utils.toWei('1'))
                         .send({ from: CrypTourWeb.accounts[0] })
                 })
                 .then((res) => {
@@ -235,8 +240,10 @@ CrypTourWeb = {
             CrypTourWeb.getSpotPrice(lp, TTAddress)
             .then((res) => {
                 responses.result.spotPrice = res.result.spotPrice
-                responses.result.maxPrice.wei = CrypTourWeb.web3Provider.utils.toBN('2').mul(CrypTourWeb.web3Provider.utils.toBN(res.result.spotPrice.wei))
-                responses.result.maxAmountIn.wei = CrypTourWeb.web3Provider.utils.fromWei(responses.result.maxPrice.wei.mul(CrypTourWeb.web3Provider.utils.toBN(amountOut))).split('.')[0]
+                responses.result.maxPrice.wei = CrypTourWeb.web3Provider.utils.toBN('2').mul(
+                                                    CrypTourWeb.web3Provider.utils.toBN(res.result.spotPrice.wei))
+                responses.result.maxAmountIn.wei = CrypTourWeb.web3Provider.utils.fromWei(responses.result.maxPrice.wei.mul(
+                                                    CrypTourWeb.web3Provider.utils.toBN(amountOut))).split('.')[0]
                 resolve(responses)
             })
             .catch(err => {
@@ -306,27 +313,97 @@ CrypTourWeb = {
         return x;
     },
 
-    recommParamsForStakeLP: function (lp, TT, amountinToken2) {
+    recommParamsForStakeLP: function (lp, tt, amountinToken) {
         let x = new Promise((resolve, reject) => {
-            let result = {}
-            CrypTourWeb.getSpotPrice(lp, TT).then((res) => {
-                let spotPrice = res.result.spotPrice.wei
-                result.spotPrice = res
-                
-            }).catch(err => {
-                reject(err, result)
-            })
+            if (CrypTourWeb.erc20TokenIn == null)
+                reject("Token In hasnt been set")
+            let responses = {
+                transactions: [],
+                result: {
+                    spotPrice: {
+                        wei: null,
+                        main: null
+                    },
+                    balances: {},
+                    recomm: {}
+                }
+            }
 
-            resolve(result)
+            let pool_contract = new CrypTourWeb.web3Provider.eth.Contract(CrypTourWeb.contracts["BPool"]._jsonInterface, lp)
+            res = pool_contract.methods.getSpotPriceSansFee(CrypTourWeb.erc20TokenIn, tt)
+            .call({ from: CrypTourWeb.accounts[0] })
+            .then((res) => {
+                if (CrypTourWeb.debug)
+                    console.log(res)
+                responses.result.spotPrice.main = CrypTourWeb.web3Provider.utils.fromWei(res)
+                responses.result.spotPrice.wei = res
+                
+                return pool_contract.methods.getBalance(CrypTourWeb.erc20TokenIn)
+                        .call({ from: CrypTourWeb.accounts[0] })
+            })
+            .then((res) => {
+                responses.result.balances.weth = res
+                return pool_contract.methods.getBalance(tt)
+                        .call({ from: CrypTourWeb.accounts[0] })
+            })
+            .then((res) => {
+                responses.result.balances.tt = res
+
+                return pool_contract.methods.totalSupply()
+                        .call({ from: CrypTourWeb.accounts[0] })
+            })
+            .then((res) => {
+                responses.result.balances.lp = res
+                let temp = CrypTourWeb.web3Provider.utils.toBN(responses.result.balances.weth)
+                let ratio = CrypTourWeb.web3Provider.utils.toBN(CrypTourWeb.web3Provider.utils.toWei(amountinToken)).div(temp)
+
+                responses.result.recomm.maxttin = _multWithDec(CrypTourWeb.web3Provider.utils.fromWei(ratio.mul(CrypTourWeb.web3Provider.utils.toBN(responses.result.balances.tt))), "1.2").split('.')[0]
+                responses.result.recomm.maxwethin = _multWithDec(amountinToken, "1.2").split('.')[0]
+                responses.result.recomm.lpout = CrypTourWeb.web3Provider.utils.fromWei(ratio.mul(CrypTourWeb.web3Provider.utils.toBN(res))).split('.')[0]
+                responses.result.recomm.ratio = ratio.toString().split('.')[0]
+                resolve(responses)
+            })
+            .catch((err) => { reject(err, responses) })
         })
         return x
     },
 
     // Stake Liquidity Pool
-    stakeLP: function (lp, lpTokenOut, maxAmountsInTT, maxAmountsInERC20) 
+    stakeLP: function (lp, tt, lpout, maxAmountsInTT, maxAmountsInERC20) 
     {
         x = new Promise((resolve, reject) => {
+            let responses = {
+                transactions: [],
+                result: {
+                    spotPrice: {
+                        wei: null,
+                        main: null
+                    },
+                    balances: {},
+                    recomm: {}
+                }
+            }
 
+
+            let pool_contract = new CrypTourWeb.web3Provider.eth.Contract(CrypTourWeb.contracts["BPool"]._jsonInterface, lp)
+            let token1_contract = new CrypTourWeb.web3Provider.eth.Contract(CrypTourWeb.contracts["IERC20"]._jsonInterface, CrypTourWeb.erc20TokenIn)
+            let tt_contract = new CrypTourWeb.web3Provider.eth.Contract(CrypTourWeb.contracts["IERC20"]._jsonInterface, tt)
+            token1_contract.methods.approve(lp, maxAmountsInERC20)
+            .send({ from: CrypTourWeb.accounts[0] })
+            .then((res) => {
+                responses.transactions.push(res)
+                return tt_contract.methods.approve(lp, maxAmountsInTT)
+                        .send({ from: CrypTourWeb.accounts[0] })})
+            .then((res) => {
+                responses.transactions.push(res)
+                return pool_contract.methods.joinPool(lpout, [maxAmountsInERC20, maxAmountsInTT])
+                    .send({ from: CrypTourWeb.accounts[0] })
+            })
+            .then((res) => {
+                responses.transactions.push(res)
+                resolve(responses)
+            })
+            .catch((err) => { reject(err, responses) })
         })
         return x
     },
@@ -336,9 +413,19 @@ CrypTourWeb = {
     },
 
     // Exit Liquidity Pool
-    exitLP: function (lp, lpTokenIn, maxAmountsInTT, maxAmountsInERC20) {
+    exitLP: function (lp, lpTokenIn) {
         x = new Promise((resolve, reject) => {
-
+            let responses = {
+                transactions: []
+            }
+            let pool_contract = new CrypTourWeb.web3Provider.eth.Contract(CrypTourWeb.contracts["BPool"]._jsonInterface, lp)
+            pool_contract.methods.exitPool(lpTokenIn, [0, 0])
+            .send({ from: CrypTourWeb.accounts[0] })
+            .then((res) =>{
+                responses.transactions.push(res)
+                resolve(responses)
+            })
+            .catch((err) => { reject(err, responses) })
         })
         return x
     },
